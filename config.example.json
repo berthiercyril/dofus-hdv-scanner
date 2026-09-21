@@ -1,0 +1,14 @@
+{
+  "api_url": "https://dofus-craft-community-price-api.dofus-craft.workers.dev",
+  "api_key": "REMPLACE_PAR_TA_CLE_VITE_COMMUNITY_API_KEY",
+  "device_id": null,
+  "server_id": null,
+  "server_name": null,
+  "tesseract_path": "C:\\Program Files\\Tesseract-OCR\\tesseract.exe",
+  "name_region": null,
+  "price_region": null,
+  "poll_interval_seconds": 1.0,
+  "submission_cooldown_seconds": 15,
+  "dry_run": true,
+  "outlier_ratio_warning": 3.0
+}

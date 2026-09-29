@@ -71,10 +71,48 @@ python dofus_hdv_scanner.py
 
 Le script ignore et signale (sans jamais envoyer) :
 - une lecture où le nom de ressource ne correspond à aucun objet Dofus-Craft connu avec certitude,
-- une lecture où aucun prix numérique n'est trouvé,
-- un prix qui diffère trop fortement (par défaut plus de 3x, réglable via `outlier_ratio_warning`
-  dans `config.json`) du prix médian communautaire actuel pour cette ressource — signe probable
-  d'une erreur de lecture (ex : un chiffre manqué par l'OCR).
+- une lecture où aucun prix numérique n'est trouvé.
+
+Si un prix diffère trop fortement (par défaut plus de 3x, réglable via `outlier_ratio_warning`
+dans `config.json`) du prix médian communautaire actuel pour cette ressource — signe probable
+d'une erreur de lecture (ex : un chiffre manqué par l'OCR) — l'envoi n'est **pas** automatique :
+- en mode envoi réel, l'outil demande confirmation avant d'envoyer (une question oui/non en
+  console, une boîte de dialogue dans l'interface graphique) ; sans confirmation, la lecture est
+  ignorée,
+- en dry-run, l'écart est seulement signalé dans le journal (aucune confirmation demandée, rien
+  n'est envoyé de toute façon).
+
+## Équipements (armes, équipements, dofus, trophées)
+
+Même principe, mais pour l'HDV des équipements : l'outil lit le nom de l'objet sélectionné (en
+haut du panneau de détail, à gauche) et **uniquement le prix le plus bas**, c'est-à-dire celui de
+la première ligne de la liste des lots.
+
+1. Ouvre l'HDV des équipements et sélectionne un objet pour afficher son panneau de détail.
+2. Calibre les zones (une seule fois, elles sont séparées de celles des ressources) :
+   ```
+   python calibrate.py --items
+   ```
+   - zone NOM : le nom de l'objet en haut du panneau (ex : « Jugement de Thanatena »), sans la
+     ligne « Niv. 200 • Faux » en dessous,
+   - zone PRIX : uniquement le prix de la **première** ligne (ex : « 109 999 999 »), sans la
+     colonne Lot, ni l'icône kamas, ni le bouton Acheter. **Calibre-la sur un objet sans
+     panoplie** : pour un objet de panoplie, la ligne « Panoplie des … » décale la liste des lots
+     d'environ 18 px vers le bas, et l'outil cherche automatiquement le premier prix jusqu'à
+     `item_price_extra_height` pixels (24 par défaut, dans `config.json`) sous la zone calibrée.
+3. Lance :
+   ```
+   python dofus_hdv_items.py
+   ```
+
+Dans l'interface graphique (`python gui.py`), choisis simplement « Équipements » dans le cadre
+« Type d'HDV » : les boutons Calibrer et Démarrer utilisent alors les zones des équipements (le
+choix est mémorisé, et verrouillé pendant une lecture).
+
+Mêmes raccourcis (F8, F9, Échap), même dry-run par défaut, même contrôle d'écart avec la médiane.
+Différence : une lecture n'est prise en compte que si elle est identique deux fois de suite, pour
+ne pas associer le prix de l'objet précédent au nouveau nom pendant le rafraîchissement de
+l'interface.
 
 ## Fichier `config.json`
 
@@ -82,7 +120,10 @@ Contient notamment ta clé d'API communautaire Dofus-Craft en clair : ce fichier
 sur ta machine, ne le partage pas et ne le mets pas dans un dépôt Git public.
 
 - `server_id` / `server_name` : ton serveur Dofus (calculés par `calibrate.py`).
-- `name_region` / `price_region` : zones d'écran calibrées.
+- `name_region` / `price_region` : zones d'écran calibrées. `price_region` couvre tout le tableau
+  des lots (colonnes Lot et Prix des lignes 1, 10, 100, 1000). Le prix envoyé est la valeur du
+  milieu des prix à l'unité des lots en vente (médiane ; avec 2 lots, le plus gros sauf s'il
+  dépasse le double de l'autre), pour écarter un lot de 1 trop bas comme un gros lot trop haut.
 - `poll_interval_seconds` : fréquence de lecture de l'écran (1 seconde par défaut).
 - `submission_cooldown_seconds` : délai minimum entre deux envois pour la même ressource, pour
   éviter d'envoyer plusieurs fois la même valeur en boucle.

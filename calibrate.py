@@ -9,7 +9,11 @@ Pour chaque zone, tu places la souris sur le coin haut-gauche puis appuies sur E
 fenêtre de commande, puis tu as 3 secondes pour placer la souris sur le coin bas-droit avant la
 capture automatique de la position. Le jeu peut rester au premier plan pendant ce temps : seule la
 position de la souris est lue, aucun clic n'est envoyé.
+
+`python calibrate.py --items` calibre à la place les zones de l'HDV des équipements (nom de
+l'objet + prix du lot le moins cher), utilisées par dofus_hdv_items.py.
 """
+import sys
 import time
 
 from pynput.mouse import Controller
@@ -54,16 +58,32 @@ def main() -> None:
     config["server_name"] = server_name
     config["server_id"] = server_id
 
-    config["name_region"] = calibrate_region(
-        "la zone où s'affiche le NOM de la ressource dans la fenêtre de prix de l'HDV"
-    )
-    config["price_region"] = calibrate_region(
-        "la zone où s'affiche le PRIX (en kamas) de la ressource dans cette même fenêtre"
-    )
+    if "--items" in sys.argv:
+        config["item_name_region"] = calibrate_region(
+            "la zone où s'affiche le NOM de l'objet, en haut du panneau de détail (à gauche de l'HDV)"
+        )
+        config["item_price_region"] = calibrate_region(
+            "la zone du PRIX de la PREMIÈRE ligne de lots uniquement (le moins cher, en haut), "
+            "sans la colonne Lot, ni l'icône kamas, ni le bouton Acheter. À faire sur un objet "
+            "SANS panoplie (le décalage d'une ligne des objets de panoplie est géré automatiquement)"
+        )
+        script = "dofus_hdv_items.py"
+    else:
+        config["name_region"] = calibrate_region(
+            "la zone où s'affiche le NOM de la ressource dans la fenêtre de prix de l'HDV"
+        )
+        # Le prix envoyé est celui du plus gros lot disponible ramené à l'unité (100, sinon 10,
+        # sinon 1) : acheter en volume au prix du lot de 1 est rarement possible.
+        config["price_region"] = calibrate_region(
+            "le TABLEAU DES LOTS de cette même fenêtre : les 4 lignes (1, 10, 100, 1000), colonne "
+            "Lot et colonne Prix, sans le bouton Acheter. À faire sur une ressource dont les 4 "
+            "lots sont en vente"
+        )
+        script = "dofus_hdv_scanner.py"
 
     save_config(config)
     print("\nCalibrage enregistré dans config.json.")
-    print("Lance ensuite `python dofus_hdv_scanner.py` (il démarre en dry-run: rien n'est envoyé, "
+    print(f"Lance ensuite `python {script}` (il démarre en dry-run: rien n'est envoyé, "
           "seulement affiché, tant que tu n'as pas vérifié que la lecture est fiable).")
 
 

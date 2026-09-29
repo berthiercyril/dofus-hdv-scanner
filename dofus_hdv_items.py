@@ -1,8 +1,9 @@
-"""Version console : lit en continu le nom et le prix d'une ressource affichés dans la fenêtre de
-prix de l'HDV Dofus (zones calibrées par calibrate.py ou par l'interface graphique gui.py) et
-envoie le prix à la base communautaire Dofus-Craft.
+"""Version console pour les équipements (armes, équipements, dofus, trophées...) : lit en continu
+le nom de l'objet sélectionné dans l'HDV et le prix du lot le MOINS CHER (première ligne de la
+liste, affichée en haut), puis envoie ce prix à la base communautaire Dofus-Craft.
 
-Pour une interface graphique à la place, lance `python gui.py`.
+Même principe que dofus_hdv_scanner.py, avec des zones d'écran séparées calibrées par
+`python calibrate.py --items`.
 
 Raccourcis pendant l'exécution :
   F8  : mettre en pause / reprendre la lecture
@@ -19,8 +20,8 @@ from scanner_core import ScanLoop
 
 def main() -> None:
     config = load_config()
-    if not config.get("server_id") or not config.get("name_region") or not config.get("price_region"):
-        print("Configuration incomplète : lance d'abord `python calibrate.py` (ou `python gui.py`).")
+    if not config.get("server_id") or not config.get("item_name_region") or not config.get("item_price_region"):
+        print("Configuration incomplète : lance d'abord `python calibrate.py --items`.")
         sys.exit(1)
 
     def confirm(message: str) -> bool:
@@ -28,9 +29,9 @@ def main() -> None:
         return answer in ("o", "oui", "y", "yes")
 
     device_id = get_or_create_device_id(config)
-    loop = ScanLoop(config, device_id, log=print, confirm=confirm)
+    loop = ScanLoop(config, device_id, log=print, confirm=confirm, mode="item")
 
-    print(f"Serveur: {config['server_name']} ({config['server_id']})")
+    print(f"Serveur: {config['server_name']} ({config['server_id']}) — mode ÉQUIPEMENTS (prix le plus bas)")
     label = "DRY-RUN (rien n'est envoyé)" if loop.is_dry_run() else "ENVOI RÉEL"
     print(f"Mode initial: {label} (F9 pour basculer, F8 pause, Échap pour quitter)")
 

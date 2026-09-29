@@ -1,11 +1,20 @@
 """Fonctions partagées entre calibrate.py et dofus_hdv_scanner.py."""
 import json
 import re
+import sys
 import unicodedata
 import uuid
 from pathlib import Path
 
-CONFIG_PATH = Path(__file__).with_name("config.json")
+# Une fois compilé en .exe (PyInstaller), __file__ pointe vers le dossier temporaire
+# d'extraction (_MEIxxxxx), pas vers le dossier où se trouve l'exécutable : il faut donc
+# se baser sur sys.executable dans ce cas pour retrouver config.json à côté de l'exe.
+if getattr(sys, "frozen", False):
+    APP_DIR = Path(sys.executable).parent
+else:
+    APP_DIR = Path(__file__).parent
+
+CONFIG_PATH = APP_DIR / "config.json"
 
 
 def load_config() -> dict:
